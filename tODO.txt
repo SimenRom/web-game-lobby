@@ -1,0 +1,2 @@
+Kva som skal skje når ein trykker på enter etter å skrive navn/kode.
+Refreshe går tilbake til der du var.

@@ -1,0 +1,38 @@
+<!DOCTYPE html><html>
+<head>
+    <script src="jquery.min.js"></script>
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>-->
+    <script src="clientscript.js"></script>
+</head>    
+<body>
+    <h1>Online party games</h1>
+    <div id="outsideLobby">
+        <p>Create new lobby or join an existing one?</p>
+        <form method="post" action="/newUserForm">
+            Username <input type="text" id="username" name="username"/><br/>
+            Lobby code <input type="text" id="lobbycode" name="lobbycode"/><br/>
+            <button type="button" id="JoinBtn" name="JoinBtn">Join lobby</button>
+            <button type="button" id="CreateBtn" name="CreateBtn">Create Lobby</button>
+        </form>
+        
+        <br/><hr/>
+        <div>
+            <!-- <h2>Lobby list</h2> -->
+            <p id="lobbyOverview">Loading lobbies...</p>
+            <button type="button" name="refresh" id="refreshLobbyList">Refresh</button>
+        </div>
+        <br/><hr/>
+        <p>Made by Simen Romstad. github.com/SimenRom</p>
+    </div>
+    <div id="insideLobby" style="display: none;">
+        <h3 id="lobbyName">Lobby name</h3>
+        <p id="playerlist">Playernames</p>
+        <button id="startGameBtn">Start game</button>
+        <div>
+            <h3>Chat</h3>
+            <p id="chatText">Join lobby to read chat.</p>
+        </div>
+    </div>
+    
+    
+</body></html>
