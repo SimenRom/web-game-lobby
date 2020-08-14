@@ -5,8 +5,14 @@ $(document).ready( ()=> {
             username: document.getElementById("username").value,
             //lobbycode: document.getElementById("lobbycode").value
         }, (data, status) => {
-            alert(data, status);
-
+            alert(data.message, status);
+            if(data.lobbycode != null){
+                document.getElementById("insideLobby").style.display = "block";
+                updateLobbyInfo(data.lobbycode);
+                document.getElementById("outsideLobby").style.display = "none";
+            } else {
+                alert("Rar feilmelding.");
+            }
         }
         );
     });

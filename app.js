@@ -41,22 +41,27 @@ app.get('/', (req, res) => {
     if(req.session.uID != null){
 
     } else {
-        req.session.uID = Math.floor(Math.random() * 10000000);
+        req.session.uID = Math.floor(Math.random() * 10000000); //This ID is only meant to be unique, not protected. 
     }
     console.log(req.session.uID, "loaded the index.html.");
     res.send(indexContent);
 });
 
 app.post('/createLobby', (req, res) => {
-    res.header('Content-Type', 'text/plain'); //bytte til json seinare.
+    res.header('Content-Type', 'application/json'); //bytte til json seinare.
+    let reply = {
+        message: "",
+        lobbycode: null
+    }
     if(req.session.uID == null){
-        res.send("Could not find uID. Try reload the page.");
+        reply.message = "Could not find uID. Try reload the page.";
+        res.send(JSON.stringify(reply));
         return;
     }
     let username = req.body.username;
     if(username === ""){
         //missing name or code
-        res.send("You must input a username.");
+        reply.message("You must input a username.");
     } else {
         //create new lobby with unique code
         let isDuplicate = true;
@@ -76,10 +81,13 @@ app.post('/createLobby', (req, res) => {
         newLobby.AddUser(new User(username, req.session.uID));
         gameServer.AddLobby(newLobby);
         req.session.lobbycode = newCode;
-        res.send("You created new lobby with id #" + newCode);
+        reply.message = "You created new lobby with id #" + newCode;
+        reply.lobbycode = newCode;
         console.log(req.session.uID, "Created new lobby with id #" + newCode);
 
     }
+    res.send(JSON.stringify(reply));
+
 })
 app.get('/lobbyinfo', (req, res) => {
     
@@ -151,8 +159,9 @@ app.get('/start', (req, res) => {
         reply.message = "Starting game...";
     } else {
         reply.accepted = false;
-        reply.message = "Only lobby-owner can start the game.";
+        reply.message = "Only lobby-owner can start the game";
     }
+    res.send(JSON.stringify(reply));
 })
 
 fs.readFile('./clientscript.js', (err, html) => {
