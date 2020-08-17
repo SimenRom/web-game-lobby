@@ -4,10 +4,13 @@ const {GameServer, GameLobby, Dice, User} = require('./GameServer.js');
 //let chats = [{code: 0, content: "Chat 0 content"}, {code: 1, content: "Content of chat 1"}];
 
 let gameServer = new GameServer();
-gameServer.AddLobby(new GameLobby(0));
-gameServer.AddLobby(new GameLobby(2));
-gameServer.AddLobby(new GameLobby(3));
-gameServer.AddLobby(new GameLobby(4));
+if(false){
+    gameServer.AddLobby(new GameLobby(1322));
+    gameServer.AddLobby(new GameLobby(2335));
+    gameServer.AddLobby(new GameLobby(6893));
+    gameServer.AddLobby(new GameLobby(2384));
+}
+let onlineUsers = new Map();
 
 const express = require('express');
 const session = require('express-session')
@@ -32,9 +35,12 @@ fs.readFile('./index.html', (err, html) => {
     }
 });
 app.get('/lobbies', (req, res) => {
-    res.header('Content-Type', 'text/plain');
+    res.header('Content-Type', 'application/json');
+    let reply = {
+        lobbies: gameServer.lobbies,
+    }
     //console.log(gameServer.LobbiesToString());
-    res.send(gameServer.LobbiesToString());
+    res.send(JSON.stringify(reply));
 })
 app.get('/', (req, res) => {
     res.header('Content-Type', 'text/html');
@@ -54,7 +60,7 @@ app.get('/', (req, res) => {
     console.log(req.session.uID, "loaded the index.html.");
     res.send(indexContent);
 });
-app.get('/refresh', (req, res) => {
+app.get('/checkUserStatus', (req, res) => {
     res.header('Content-Type', 'application/json');
     let reply = {
         lobbycode: null
@@ -109,7 +115,6 @@ app.post('/createLobby', (req, res) => {
 
 })
 app.get('/lobbyinfo', (req, res) => {
-    
     res.header('Content-Type', 'application/json');
     let reply = {
         accepted: false,
@@ -147,21 +152,17 @@ app.post('/joinLobby', (req, res) => {
     }
     let username = req.body.username;
     let lobbycode = parseInt(req.body.lobbycode);
-    if(lobbycode === "" || username === ""){
-        //missing name or code
+    if(lobbycode === "" || username === ""){ //missing name or code
         reply.message = "You must input a username and lobby code.";
         reply.accepted = false;
-    } else if (gameServer.ExistsLobbyWithCode(lobbycode)){
-        //join existing lobby
-
+    } else if (gameServer.ExistsLobbyWithCode(lobbycode)){ //join existing lobby
         reply.message = ("Joining lobby #" + lobbycode);
         reply.accepted = true;
         gameServer.JoinPlayerToLobby(username, req.session.uID, lobbycode);
         req.session.lobbycode = lobbycode;
     } else {
         reply.accepted = false;
-        reply.message = "Found no lobby with code " + lobbycode; //her slapp eg av.
-
+        reply.message = "Found no lobby with code " + lobbycode; 
     }
     res.send(JSON.stringify(reply));
 })
@@ -179,6 +180,9 @@ app.get('/leaveLobby', (req, res) => {
             console.log("Removed " + userID + " from lobby #" + lobbycode);
             reply.accepted = true;
             reply.message = "Removed " + userID + " from lobby #" + lobbycode;
+            if(gameServer.GetLobby(lobbycode).users.length <= 0){
+                gameServer.RemoveLobby(lobbycode);
+            }
         }
     }
     res.send(JSON.stringify(reply));
@@ -197,6 +201,18 @@ app.get('/start', (req, res) => {
     } else {
         reply.accepted = false;
         reply.message = "Only lobby-owner can start the game";
+    }
+    res.send(JSON.stringify(reply));
+})
+app.get('/showPresence', (req, res) => {
+    res.header('Content-Type', 'application/json');
+    let reply = {
+        message: "ty"
+    }
+    if(req.session.uID != null){
+        let time = new Date().getTime();
+        onlineUsers.set(req.session.uID, time);
+        //console.log(req.session.uID + " showed presence at " + time);
     }
     res.send(JSON.stringify(reply));
 })
@@ -223,6 +239,28 @@ app.get('/jquery.min.js', (req, res) => {
     res.send(indexContentJSALT);
 })
 
+function removeOfflineUsers(){
+    let now = new Date().getTime();
+    let timeout = 1000 * 60 * 5;
+    let border = now - timeout;
+    //console.log("Throwing inactive users.");
+    onlineUsers.forEach((val, key, map)=>{
+        if(val < border){
+            console.log(key + " is offline and will be removed.");
+            map.delete(key);
+            let lobby = gameServer.GetLobby(gameServer.FindLobbyWithUser(key));
+            if(lobby != null){
+                lobby.RemoveUser(key);
+                if(lobby.users.length <= 0){
+                    gameServer.RemoveLobby(lobby.code);
+                }
+            }
+        }
+    })
+    
+}
+
 
 app.listen(3000, () => console.log("Server running on port 3000.")); //'127.0.0.1');
 
+setInterval(removeOfflineUsers, 60000);

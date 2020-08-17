@@ -71,28 +71,51 @@ $(document).ready( ()=> {
     document.getElementById('refreshLobbyList').addEventListener("click", ()=>{
         updateLobbyList();
     });
-    function updateLobbyList() {
-        $.get("/lobbies", (data, status) => {
-            document.getElementById("lobbyOverview").innerHTML = "" + data;
-            //console.log(data, status);
-        });
-    }
     function fromOutsideToInsideLobby(lobbycode){
+        inLobby = true;
         document.getElementById("insideLobby").style.display = "block";
         updateLobbyInfo(lobbycode);
         document.getElementById("outsideLobby").style.display = "none";
     }
     function fromInsideToOutsideLobby(){
+        inLobby = false;
         document.getElementById("insideLobby").style.display = "none";
         document.getElementById("outsideLobby").style.display = "block";
+        updateLobbyList();
     }
-    updateLobbyList();
-    $.get("/refresh", (data, status) => {
+    function updateLobbyList() {
+        $.get("/lobbies", (data, status) => {
+            let lobbies = data.lobbies;
+            let html = "<div><h2>" + lobbies.length + " lobbies</h2>";
+            lobbies.forEach(lobby => {
+                html += "<dl><dt>#" + lobby.code + "</dt>";
+                html += "<dd>" + lobby.status + "</dd>";
+                //html += "<ul>";
+                lobby.users.forEach(usr => {
+                    html += "<dd>" + usr.username + "</dd>";
+                })
+                //html += "</ul>";
+                html += /*"<button type='button' onClick='joinLobby(" + lobby.code + ")'>Join</button>*/"</dl><br/>";
+            })
+            html += "</div>";
+            document.getElementById("lobbyOverview").innerHTML = "" + html;
+            //console.log(data, status);
+        });
+    }
+    function showPresence(){
+        $.get("/showPresence", (data, status) => {
+            //console.log("Showing precense. " + data);
+
+        })
+    }
+    $.get("/checkUserStatus", (data, status) => {
         if(data.lobbycode != null){
-            console.log("You are in lobby " + data.lobbycode);
+            console.log("You are in lobby #" + data.lobbycode);
             fromOutsideToInsideLobby(data.lobbycode);
         }
     })
-    setInterval(updateLobbyList, 5000);
+    updateLobbyList();
+    var UpdateLobbyListInterval = setInterval(updateLobbyList, 5000); 
+    var UpdateOnlineInterval = setInterval(showPresence, 20000);
 });
 

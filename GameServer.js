@@ -8,7 +8,8 @@ class GameServer {
   RemoveLobby(code) {
     for (let i = 0; i < this.lobbies.length; i++) {
       if (this.lobbies[i].code == code) {
-        this.lobbies.splice(i);
+        this.lobbies.splice(i, 1);
+        console.log("Removed lobby #" + code);
         return;
       }
     }
@@ -70,7 +71,7 @@ let date = new Date();
 class GameLobby {
   constructor(code, ownerID) {
     this.ownerID = ownerID;
-    this.game = null; //her slapp eg av
+    this.game = null; 
     this.status = "Waiting to start";
     this.code = code;
     this.users = new Array();
@@ -85,7 +86,6 @@ class GameLobby {
     for (let i = 0; i < this.users.length; i++) {
       if (this.users[i].uID == uID) {
         this.users.splice(i);
-        if(this.users.length <= 0)
         return true;
       }
     }
