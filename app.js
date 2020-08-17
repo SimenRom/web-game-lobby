@@ -5,6 +5,9 @@ const {GameServer, GameLobby, Dice, User} = require('./GameServer.js');
 
 let gameServer = new GameServer();
 gameServer.AddLobby(new GameLobby(0));
+gameServer.AddLobby(new GameLobby(2));
+gameServer.AddLobby(new GameLobby(3));
+gameServer.AddLobby(new GameLobby(4));
 
 const express = require('express');
 const session = require('express-session')
@@ -39,14 +42,30 @@ app.get('/', (req, res) => {
     //res.end();
     let thisID = 0;
     if(req.session.uID != null){
-
+        let lobbycode = req.session.lobbycode;
+        if(lobbycode != null){
+            if(gameServer.ExistsLobbyWithCode(lobbycode)){
+                gameServer.GetLobby(lobbycode);
+            }
+        }
     } else {
         req.session.uID = Math.floor(Math.random() * 10000000); //This ID is only meant to be unique, not protected. 
     }
     console.log(req.session.uID, "loaded the index.html.");
     res.send(indexContent);
 });
+app.get('/refresh', (req, res) => {
+    res.header('Content-Type', 'application/json');
+    let reply = {
+        lobbycode: null
+    }
+    if(req.session.uID != null){
+        let lobbycode = gameServer.FindLobbyWithUser(req.session.uID);
+        reply.lobbycode = lobbycode;
+    }
+    res.send(JSON.stringify(reply));
 
+})
 app.post('/createLobby', (req, res) => {
     res.header('Content-Type', 'application/json'); //bytte til json seinare.
     let reply = {
@@ -143,6 +162,24 @@ app.post('/joinLobby', (req, res) => {
         reply.accepted = false;
         reply.message = "Found no lobby with code " + lobbycode; //her slapp eg av.
 
+    }
+    res.send(JSON.stringify(reply));
+})
+app.get('/leaveLobby', (req, res) => {
+    res.header('Content-Type', 'application/json');
+    let reply = {
+        accepted: false,
+        message: ""
+    }
+    let userID = req.session.uID;
+    let lobbycode = req.session.lobbycode;
+    if(userID != null && lobbycode != null){
+        let success = gameServer.GetLobby(lobbycode).RemoveUser(userID);
+        if(success){
+            console.log("Removed " + userID + " from lobby #" + lobbycode);
+            reply.accepted = true;
+            reply.message = "Removed " + userID + " from lobby #" + lobbycode;
+        }
     }
     res.send(JSON.stringify(reply));
 })

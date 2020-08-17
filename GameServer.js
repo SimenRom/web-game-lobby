@@ -54,6 +54,16 @@ class GameServer {
   JoinPlayerToLobby(username, uID, lobbycode) {
     this.GetLobby(lobbycode).AddUser(new User(username, uID));
   }
+  FindLobbyWithUser(uID){
+    
+    for(let i = 0; i < this.lobbies.length; i++){
+      if(this.lobbies[i].ExistsUser(uID)){
+        console.log(uID + " is already in lobby #" + this.lobbies[i].code);
+        return this.lobbies[i].code;
+      }
+    }
+    return null;
+  }
 }
 let date = new Date();
 
@@ -63,7 +73,7 @@ class GameLobby {
     this.game = null; //her slapp eg av
     this.status = "Waiting to start";
     this.code = code;
-    this.users = [];
+    this.users = new Array();
     this.gameMode = GameModes.NOTSELECTED;
     this.chat = date.getUTCHours() + ":" + date.getUTCSeconds() + " Beginning of chat (UTC)\n";
   }
@@ -71,16 +81,26 @@ class GameLobby {
   AddUser(user) {
     this.users.push(user);
   }
-  RemoveUser(user) {
+  RemoveUser(uID) {
     for (let i = 0; i < this.users.length; i++) {
-      if (this.users[i].uID == user.uID) {
+      if (this.users[i].uID == uID) {
         this.users.splice(i);
-        return;
+        if(this.users.length <= 0)
+        return true;
       }
     }
+    return false;
   }
   SelectGamemode(gameMode) {
     this.gameMode = gameMode;
+  }
+  ExistsUser(uID){
+    for(let i = 0; i < this.users.length; i++){
+      if(this.users[i].uID == uID){
+        return true;
+      }
+    }
+    return false;
   }
   StartGame() {
     switch (this.gameMode) {
