@@ -11,8 +11,8 @@
         <form method="post" action="/newUserForm">
             Username <input type="text" id="username" name="username"/><br/>
             Lobby code <input type="text" id="lobbycode" name="lobbycode"/><br/>
-            <button type="button" id="JoinBtn" name="JoinBtn">Join lobby</button>
-            <button type="button" id="CreateBtn" name="CreateBtn">Create Lobby</button>
+            <button type="button" id="JoinBtn" name="JoinBtn">Join Existing lobby</button>
+            <button type="button" id="CreateBtn" name="CreateBtn">Create New Lobby</button>
         </form>
         
         <br/><hr/>
@@ -26,12 +26,17 @@
     </div>
     <div id="insideLobby" style="display: none;">
         <h3 id="lobbyName">Lobby name</h3>
-        <p id="playerlist">Playernames</p>
+        <p id="playerlist">Player names</p>
+        <p id="lobbyHost">Lobby host</p>
         <button id="startGameBtn">Start game</button>
         <button id="leaveLobbyBtn">Leave lobby</button>
         <div>
             <h3>Chat</h3>
-            <p id="chatText">Join lobby to read chat.</p>
+            <p id="chatText">Join a lobby to read chat.</p>
+            <div>
+                Write something <input type="text" id="chatInput" name="message"/>
+                <button type="button" id="SendChatMessageBtn">Send</button>
+            </div>
         </div>
     </div>
     

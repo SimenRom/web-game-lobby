@@ -76,16 +76,23 @@ class GameLobby {
     this.code = code;
     this.users = new Array();
     this.gameMode = GameModes.NOTSELECTED;
-    this.chat = date.getUTCHours() + ":" + date.getUTCSeconds() + " Beginning of chat (UTC)\n";
+    this.chat = new Array(); 
+    this.chat.push({"time": date.getUTCHours() + ":" + date.getUTCMinutes(), "message" :  "Lobby created \n", "uID": 2020});
+  }
+
+  NewChatMessage(message, uID){
+    date = new Date();
+    this.chat.push({"message" : message, "uID": uID, "time": date.getUTCHours() + ":" + date.getUTCMinutes()});
   }
 
   AddUser(user) {
     this.users.push(user);
+    return;
   }
   RemoveUser(uID) {
     for (let i = 0; i < this.users.length; i++) {
       if (this.users[i].uID == uID) {
-        this.users.splice(i);
+        this.users.splice(i, 1);
         return true;
       }
     }
@@ -93,6 +100,14 @@ class GameLobby {
   }
   SelectGamemode(gameMode) {
     this.gameMode = gameMode;
+  }
+  GetUser(uID){
+    for(let i = 0; i < this.users.length; i++){
+      if(this.users[i].uID == uID){
+        return this.users[i];
+      }
+    }
+    return null;
   }
   ExistsUser(uID){
     for(let i = 0; i < this.users.length; i++){

@@ -38,6 +38,10 @@ app.get('/lobbies', (req, res) => {
     res.header('Content-Type', 'application/json');
     let reply = {
         lobbies: gameServer.lobbies,
+        currentLobby: null
+    }
+    if(req.session.lobbycode != null){
+        reply.currentLobby = req.session.lobbycode;
     }
     //console.log(gameServer.LobbiesToString());
     res.send(JSON.stringify(reply));
@@ -76,17 +80,19 @@ app.post('/createLobby', (req, res) => {
     res.header('Content-Type', 'application/json'); //bytte til json seinare.
     let reply = {
         message: "",
-        lobbycode: null
+        lobbycode: null,
+        errorcode: null
     }
     if(req.session.uID == null){
         reply.message = "Could not find uID. Try reload the page.";
+        reply.errorcode = 100;
         res.send(JSON.stringify(reply));
         return;
     }
     let username = req.body.username;
     if(username === ""){
         //missing name or code
-        reply.message("You must input a username.");
+        reply.message = "You need to input a username.";
     } else {
         //create new lobby with unique code
         let isDuplicate = true;
@@ -119,8 +125,9 @@ app.get('/lobbyinfo', (req, res) => {
     let reply = {
         accepted: false,
         message: "",
-        chat: "",
+        chat: null,
         players: new Array(),
+        owner: "",
     }
     let lobbycode = req.query.lobbycode;
     if(lobbycode == null){
@@ -129,9 +136,20 @@ app.get('/lobbyinfo', (req, res) => {
         let lobby = gameServer.GetLobby(lobbycode);
         if(lobby != null){
             reply.message = "Found lobby #" + lobby.code;
-            reply.chat = lobby.chat;
+            reply.chat = lobby.chat.map(e => {
+                let newObj = {
+                    time: e.time,
+                    username: "",
+                    message: e.message,
+                }
+                if(lobby.ExistsUser(e.uID)){
+                    newObj.username = lobby.GetUser(e.uID).username
+                }
+                return newObj;
+            });
             reply.players = lobby.users;
             reply.accepted = true;
+            reply.owner = lobby.GetUser(lobby.ownerID);
         } else {
             reply.message = "No lobby with code " + lobbycode;
         }
@@ -143,9 +161,11 @@ app.post('/joinLobby', (req, res) => {
     let reply = {
         message: "",
         accepted: false,
+        errorcode: null
     }
     if(req.session.uID == null){
         reply.message = "Error. Could not find uID. Try reload the page.";
+        reply.errorcode = 101;
         reply.accepted = false;
         res.send(JSON.stringify(reply));
         return;
@@ -153,7 +173,7 @@ app.post('/joinLobby', (req, res) => {
     let username = req.body.username;
     let lobbycode = parseInt(req.body.lobbycode);
     if(lobbycode === "" || username === ""){ //missing name or code
-        reply.message = "You must input a username and lobby code.";
+        reply.message = "You need to input a username and lobby code.";
         reply.accepted = false;
     } else if (gameServer.ExistsLobbyWithCode(lobbycode)){ //join existing lobby
         reply.message = ("Joining lobby #" + lobbycode);
@@ -180,8 +200,12 @@ app.get('/leaveLobby', (req, res) => {
             console.log("Removed " + userID + " from lobby #" + lobbycode);
             reply.accepted = true;
             reply.message = "Removed " + userID + " from lobby #" + lobbycode;
-            if(gameServer.GetLobby(lobbycode).users.length <= 0){
+            let lobbyObj = gameServer.GetLobby(lobbycode);
+            if(lobbyObj.users.length <= 0){
                 gameServer.RemoveLobby(lobbycode);
+            } else if (!lobbyObj.ExistsUser(lobbyObj.ownerID)){
+                console.log(lobbyObj.users[0]);
+                lobbyObj.ownerID = lobbyObj.users[0].uID;
             }
         }
     }
@@ -213,6 +237,30 @@ app.get('/showPresence', (req, res) => {
         let time = new Date().getTime();
         onlineUsers.set(req.session.uID, time);
         //console.log(req.session.uID + " showed presence at " + time);
+    }
+    res.send(JSON.stringify(reply));
+})
+app.post('/sendChatMessage', (req, res) => {
+    res.header('Content-Type', 'application/json');
+    let reply = {
+        lobbycode: req.session.lobbycode,
+    }
+    let chatMessage = req.body.message;
+    let uID = req.session.uID;
+    let lobbycode = req.session.lobbycode;
+    if(lobbycode != null && uID != null && chatMessage.length >= 1){
+        let lobby = gameServer.GetLobby(lobbycode);
+        if(lobby != null){
+            let user = lobby.GetUser(uID);
+            lobby.NewChatMessage(chatMessage, uID);
+        }
+    }
+    res.send(JSON.stringify(reply));
+})
+app.get('/kickUser', (req, res) => {
+    res.header('Content-Type', 'application/json');
+    let reply = {
+        message: "Not implemented yet.",
     }
     res.send(JSON.stringify(reply));
 })
