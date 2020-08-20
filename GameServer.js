@@ -144,7 +144,14 @@ const GameModes = {
 
 class Game {
   constructor(users) {
-    this.players = users;
+    this.users = users;
+  }
+  GetUser(uID){
+    users.forEach(u=>{
+      if(u.uID == uID){
+        return u;
+      }
+    })
   }
 }
 
@@ -152,22 +159,77 @@ class DiceGame extends Game {
   constructor(users) {
     super(users);
     this.dices = [new Dice(), new Dice(), new Dice(), new Dice(), new Dice()];
+    score = new Map();
+    turnOwner = null;
+    turnIndex = 0;
+    roundsPlayed = 0;
+    roundsToPlay = 4;
   }
   StartGame() {
+    if(users.length < 2){
+      console.log("Too few to start game...");
+      return null;
+    }
     console.log("Game is starting...");
+    turnOwner = users[turnIndex];
     this.RollDices();
+
+    users.forEach(u => {
+      score.delete(u.uID);
+      score.set(u.uID, 0);
+    })
   }
+  EndGame(){
+    console.log("Game is done.");
+    score.forEach((v, i, a) => {
+      console.log(this.GetUser(i) + " got score: " + v);
+    })
+  }
+  DoTurn(user){
+    
+    if(user.uID == turnOwner.uID){
+
+      if(roundsPlayed >= 4){
+        EndGame();
+        return false;
+      } else if (turnIndex == this.users.length){
+        roundsPlayed++;
+      }
+
+      
+      this.RollDices()
+      let sumRound = this.GetDiceSum();
+      console.log(user.username + " got score: " + sumRound);
+      score.set(turnOwner.uID, score.get(turnOwner.uID) + sumRound);
+
+      turnIndex = (turnIndex+1) % users.length;
+      turnOwner = users[turnIndex]
+
+      return true;
+    } else {
+      console.log(user.username + " tried to do turn, but turnowner is " + turnOwner.username)
+      return false;
+    }
+  }
+
   RollDices() {
-    this.dices.forEach((element) => {
-      element.NewRandomValue();
+    this.dices.forEach((dice) => {
+      dice.Roll();
     });
   }
   GetDiceValues() {
     let values = [];
-    this.dices.forEach((element) => {
-      values.push(element.GetValue());
+    this.dices.forEach((dice) => {
+      values.push(dice.GetValue());
     });
     return values;
+  }
+  GetDiceSum(){
+    let sum = 0;
+      this.GetDiceValues().forEach(v=>{
+        sum += v;
+      });
+      return sum;
   }
 }
 
@@ -175,7 +237,7 @@ class Dice {
   constructor() {
     this.value = 0;
   }
-  NewRandomValue() {
+  Roll() {
     this.value = Math.floor(Math.random() * 6 + 1);
   }
   GetValue() {

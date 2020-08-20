@@ -1,16 +1,9 @@
 const {GameServer, GameLobby, Dice, User} = require('./GameServer.js');
+const {GameServerHandler} = require('./GameServerHandler.js');
 //let lobbycodes = [0, 1];
 //let lobbies = [{code: 0, users: ["Alf", "Berit"]}, {code: 1, users: ["Chris", "Dina"]}];
 //let chats = [{code: 0, content: "Chat 0 content"}, {code: 1, content: "Content of chat 1"}];
 
-let gameServer = new GameServer();
-if(false){
-    gameServer.AddLobby(new GameLobby(1322));
-    gameServer.AddLobby(new GameLobby(2335));
-    gameServer.AddLobby(new GameLobby(6893));
-    gameServer.AddLobby(new GameLobby(2384));
-}
-let onlineUsers = new Map();
 
 const express = require('express');
 const session = require('express-session')
@@ -22,6 +15,21 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
 }))
+let server = app.listen(3000, () => console.log("Server running on port 3000."));
+
+let io = require('socket.io')(server);
+
+let gameServer = new GameServer();
+let gameServerHandler = new GameServerHandler(app, io);
+
+if(false){
+    gameServer.AddLobby(new GameLobby(1322));
+    gameServer.AddLobby(new GameLobby(2335));
+    gameServer.AddLobby(new GameLobby(6893));
+    gameServer.AddLobby(new GameLobby(2384));
+}
+let onlineUsers = new Map();
+
 
 let fs = require('fs');
 let indexContentJS = '';
@@ -222,6 +230,7 @@ app.get('/start', (req, res) => {
     if(gameServer.GetLobby(lobbycode).ownerID == uID){
         reply.accepted = true;
         reply.message = "Starting game...";
+        gameServerHandler.startNewGame();
     } else {
         reply.accepted = false;
         reply.message = "Only lobby-owner can start the game";
@@ -309,6 +318,6 @@ function removeOfflineUsers(){
 }
 
 
-app.listen(3000, () => console.log("Server running on port 3000.")); //'127.0.0.1');
+ //'127.0.0.1');
 
 setInterval(removeOfflineUsers, 60000);

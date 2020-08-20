@@ -1,5 +1,6 @@
 let inLobby = false;
 $(document).ready( ()=> {
+    let socket = io();
     document.getElementById('CreateBtn').addEventListener("click", ()=>{
         $.post("/createLobby", {
             username: document.getElementById("username").value,
