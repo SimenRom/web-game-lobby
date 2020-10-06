@@ -1,7 +1,8 @@
 class GameServerHandler {
+    
     constructor(app, io){
         this.app = app;
-        
+        this.socketList = new Array();
 
         app.get('/testet', (req, res)=>{
             res.header('Content-Type', 'application/json');
@@ -13,13 +14,16 @@ class GameServerHandler {
         })
         io.on('connection', (socket) => {
             console.log('a user connected');
+            this.socketList.push(socket)
             socket.on('disconnect', ()=>{
                 console.log('a user disconnected');
-
+                //socket.remove() fjerne socket fra lista kanskje?
             })
         });
         
     }
-
+    startNewGame() {
+        
+    }
 }
 exports.GameServerHandler = GameServerHandler;

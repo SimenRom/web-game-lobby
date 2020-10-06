@@ -140,6 +140,7 @@ const GameModes = {
   NOTSELECTED: "none",
   DICEGAME: "dicegame",
   RANDOM: "random",
+  COUNTRYGUESS: "countryguess",
 };
 
 class Game {
@@ -153,6 +154,19 @@ class Game {
       }
     })
   }
+}
+
+class CountryguessGame extends Game {
+  constructor(users){
+    super(users);
+  }
+  StartGame(){
+    if(this.users.length < 1){
+      console.log("Too few to start country guesser game...");
+      return null;
+    }
+  }
+  
 }
 
 class DiceGame extends Game {
